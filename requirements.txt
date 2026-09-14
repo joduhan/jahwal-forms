@@ -1,0 +1,6 @@
+python-docx
+openpyxl
+pandas
+streamlit
+fpdf2
+python-dotenv
