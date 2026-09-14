@@ -41,12 +41,28 @@ st.markdown("""
 .stButton > button:hover { background-color:#163f6f; }
 .sec { font-size:1rem; font-weight:700; color:#1B4F8A;
        border-left:4px solid #1B4F8A; padding-left:8px; margin:1rem 0 0.3rem; }
+/* A4 미리보기 외부 배경 */
+.preview-wrapper {
+    background: #f0f0f0;
+    padding: 20px;
+    border-radius: 4px;
+    overflow-y: auto;
+    max-height: 900px;
+}
+/* A4 용지 (96dpi 기준: 210mm=794px, 297mm=1123px) */
 .preview-container {
-    background: white; padding: 36px 40px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-    min-height: 600px; font-family: '맑은 고딕', sans-serif;
-    font-size: 10pt; line-height: 160%; color: #000;
-    border-radius: 2px;
+    background: white;
+    padding: 25mm 20mm 20mm 25mm;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    width: 100%;
+    min-height: 842px;
+    max-width: 595px;
+    margin: 0 auto;
+    font-family: '맑은 고딕', 'Malgun Gothic', sans-serif;
+    font-size: 10pt;
+    line-height: 160%;
+    color: #000;
+    box-sizing: border-box;
 }
 .preview-title { text-align:center; font-size:15pt; font-weight:bold; margin-bottom:16px; }
 .preview-sub { text-align:center; font-size:10pt; margin-bottom:14px; }
@@ -57,6 +73,23 @@ st.markdown("""
 .pt .lbl { background:#EFEFEF; font-weight:bold; text-align:center; width:35%; }
 .sign { margin-top:20px; text-align:right; font-size:10pt; line-height:200%; }
 .ph { color:#bbb; font-style:italic; }
+/* A4 페이지 구분선 */
+.page-break {
+    border-top: 2px dashed #ccc;
+    margin: 20px 0;
+    position: relative;
+}
+.page-break::after {
+    content: '--- 다음 페이지 ---';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f0f0f0;
+    padding: 0 10px;
+    color: #999;
+    font-size: 8pt;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,7 +117,10 @@ def _v(val, ph=""):
     return s if s else f'<span class="ph">{ph}</span>'
 
 def _preview(html: str):
-    st.markdown(f'<div class="preview-container">{html}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="preview-wrapper"><div class="preview-container">{html}</div></div>',
+        unsafe_allow_html=True,
+    )
 
 def _tr2(label, val, ph=""):
     return f'<tr><td class="lbl">{label}</td><td>{_v(val, ph)}</td></tr>'
