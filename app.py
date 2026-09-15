@@ -140,11 +140,11 @@ def preview_html_agreement(d: dict, party_type: str) -> str:
     <tr><td class="lbl">지역 사업자등록번호</td><td>{_v(d.get('reg_local'),'000-00-00000')}</td></tr>
     """
     if is3:
-        party_rows += f"""
-        <tr><td class="lbl">자활기업명</td><td>{_v(d.get('enterprise_name'),'자활기업명')}</td></tr>
-        <tr><td class="lbl">기업 대표자</td><td>{_v(d.get('rep_enterprise'),'대표자')}</td></tr>
-        <tr><td class="lbl">기업 사업자번호</td><td>{_v(d.get('reg_enterprise'),'000-00-00000')}</td></tr>
-        """
+        party_rows += (
+            f'<tr><td class="lbl">자활기업명</td><td>{_v(d.get("enterprise_name"),"자활기업명")}</td></tr>'
+            f'<tr><td class="lbl">기업 대표자</td><td>{_v(d.get("rep_enterprise"),"대표자")}</td></tr>'
+            f'<tr><td class="lbl">기업 사업자번호</td><td>{_v(d.get("reg_enterprise"),"000-00-00000")}</td></tr>'
+        )
     sign_line = f"""
     {_v(d.get('center_wide'),'광역자활센터')} 대표자: {_v(d.get('rep_wide'),'')}&nbsp;(인)<br>
     {_v(d.get('center_local'),'지역자활센터')} 대표자: {_v(d.get('rep_local'),'')}&nbsp;(인)
