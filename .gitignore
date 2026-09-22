@@ -5,3 +5,5 @@ __pycache__/
 *.docx
 *.pdf
 *.hwp
+*.hwpx
+!data/표준_업무협약서.docx
