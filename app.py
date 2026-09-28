@@ -22,6 +22,7 @@ from modules.startup_forms import (
 )
 from modules.report_gen import generate_prompt, make_report_docx
 from modules.doc_builder import OUTPUTS_DIR
+from modules.agreement_hwpx import fill_hwpx
 
 DEFAULT_CENTER_WIDE = "제주특별자치도광역자활센터"
 
@@ -368,7 +369,11 @@ def page_home():
 
 def page_agreement():
     st.title("📄 표준협약서")
-    party_type_label = st.radio("협약 유형", ["2자용 (광역 + 지역)","3자용 (광역 + 지역 + 자활기업)"], horizontal=True, key="ag_ptype")
+    r1, r2 = st.columns(2)
+    with r1:
+        party_type_label = st.radio("협약 유형", ["2자용 (광역 + 지역)","3자용 (광역 + 지역 + 자활기업)"], horizontal=True, key="ag_ptype")
+    with r2:
+        output_fmt = st.radio("출력 형식", ["DOCX (Word)", "HWPX (한글)"], horizontal=True, key="ag_fmt")
     is3 = "3자용" in party_type_label
     party_type = "3way" if is3 else "2way"
 
@@ -420,7 +425,13 @@ def page_agreement():
         _preview(preview_html_agreement(d, party_type))
         if "ag_path" in st.session_state:
             st.divider()
-            _dl_buttons(st.session_state["ag_path"])
+            p = st.session_state["ag_path"]
+            fmt = st.session_state.get("ag_fmt", "docx")
+            if fmt == "hwpx":
+                with open(p, "rb") as f:
+                    st.download_button("⬇️ HWPX (한글)", f.read(), p.name, mime="application/zip")
+            else:
+                _dl_buttons(p)
 
     if gen:
         required = [center_wide, support_content, period_start, period_end,
@@ -431,8 +442,42 @@ def page_agreement():
         else:
             with st.spinner("문서를 생성하는 중..."):
                 try:
-                    path = make_agreement(party_type=party_type, data=d)
+                    if "HWPX" in output_fmt:
+                        hwpx_data = {
+                            "party_type": party_type,
+                            "agreement_no": d.get("contract_no", ""),
+                            "support_name": support_content,
+                            "gwangnyeok": {
+                                "name": center_wide,
+                                "rep": rep_wide,
+                                "reg_no": reg_wide,
+                                "addr": "",
+                            },
+                            "jiyeok": {
+                                "name": center_local,
+                                "rep": rep_local,
+                                "reg_no": reg_local,
+                                "addr": "",
+                            },
+                            "support_content": support_content,
+                            "period_start": period_start,
+                            "period_end": period_end,
+                            "budget": d.get("amount_central", ""),
+                            "budget_gicup": d.get("amount_fund", ""),
+                            "budget_jiyeok": d.get("amount_local_support", ""),
+                            "date": "",
+                        }
+                        if is3:
+                            hwpx_data["gieop"] = {
+                                "name": enterprise_name,
+                                "rep": rep_enterprise,
+                                "reg_no": reg_enterprise,
+                            }
+                        path = fill_hwpx(hwpx_data)
+                    else:
+                        path = make_agreement(party_type=party_type, data=d)
                     st.session_state["ag_path"] = path
+                    st.session_state["ag_fmt"] = "hwpx" if "HWPX" in output_fmt else "docx"
                     st.success(f"✅ 생성 완료: `{path.name}`")
                     st.rerun()
                 except Exception as e:

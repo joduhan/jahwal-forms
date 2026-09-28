@@ -7,7 +7,7 @@ import zipfile
 from pathlib import Path
 from lxml import etree
 
-TEMPLATE_HWPX = Path(r"C:\Users\PC\Desktop\표준 업무협약서.hwpx")
+TEMPLATE_HWPX = Path(__file__).parent.parent / "표준 업무협약서.hwpx"
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
 
 HP = "http://www.hancom.co.kr/hwpml/2011/paragraph"
