@@ -369,11 +369,29 @@ def page_home():
 
 def page_agreement():
     st.title("📄 표준협약서")
-    r1, r2 = st.columns(2)
-    with r1:
-        party_type_label = st.radio("협약 유형", ["2자용 (광역 + 지역)","3자용 (광역 + 지역 + 자활기업)"], horizontal=True, key="ag_ptype")
-    with r2:
-        output_fmt = st.radio("출력 형식", ["DOCX (Word)", "HWPX (한글)"], horizontal=True, key="ag_fmt")
+
+    top1, top2, top3 = st.columns([3, 3, 4])
+    with top1:
+        party_type_label = st.radio(
+            "협약 유형",
+            ["2자용 (광역 + 지역)", "3자용 (광역 + 지역 + 자활기업)"],
+            horizontal=False, key="ag_ptype",
+        )
+    with top2:
+        output_fmt = st.radio(
+            "📁 출력 형식",
+            ["📝 DOCX (Word)", "📋 HWPX (한글 원본)"],
+            horizontal=False, key="ag_fmt",
+        )
+    with top3:
+        if "HWPX" in output_fmt:
+            st.info("**HWPX (한글)** — 원본 한글 파일 레이아웃 100% 보존\n\n"
+                    "서식, 폰트, 표 구조가 원본과 동일하게 출력됩니다.")
+        else:
+            st.info("**DOCX (Word)** — 원본 HWPX 구조를 충실히 재현한\n\n"
+                    "Word 문서로 출력됩니다.")
+
+    st.divider()
     is3 = "3자용" in party_type_label
     party_type = "3way" if is3 else "2way"
 
@@ -409,7 +427,8 @@ def page_agreement():
         amount_fund          = e3.text_input("자활기금",              placeholder="0",         key="ag_af")
         amount_local_support = e4.text_input("지역자활사업지원비",    placeholder="0",         key="ag_al")
 
-        gen = st.button("📄 문서 생성", key="ag_gen")
+        btn_label = "📋 한글(HWPX) 생성" if "HWPX" in output_fmt else "📄 Word(DOCX) 생성"
+        gen = st.button(btn_label, key="ag_gen", use_container_width=True)
 
     d = dict(center_wide=center_wide, center_local=center_local,
              enterprise_name=enterprise_name, rep_wide=rep_wide, rep_local=rep_local,
@@ -428,8 +447,14 @@ def page_agreement():
             p = st.session_state["ag_path"]
             fmt = st.session_state.get("ag_fmt", "docx")
             if fmt == "hwpx":
+                st.success(f"✅ 한글(HWPX) 파일 생성 완료: `{p.name}`")
                 with open(p, "rb") as f:
-                    st.download_button("⬇️ HWPX (한글)", f.read(), p.name, mime="application/zip")
+                    st.download_button(
+                        "⬇️ 한글(HWPX) 다운로드",
+                        f.read(), p.name,
+                        mime="application/zip",
+                        use_container_width=True,
+                    )
             else:
                 _dl_buttons(p)
 
