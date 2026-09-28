@@ -9,7 +9,7 @@ from docx import Document
 from docx.oxml.ns import qn
 from lxml import etree
 
-TEMPLATE_DOCX = Path(r"C:\Users\PC\Desktop\웹사이트\data\표준_업무협약서.docx")
+TEMPLATE_DOCX = Path(__file__).parent.parent / "data" / "표준_업무협약서.docx"
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
 
 

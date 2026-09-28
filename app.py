@@ -14,9 +14,9 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent))
 
 from modules.common_forms import (
-    make_agreement, make_privacy_consent,
-    make_integrity_pledge, make_all_common,
+    make_privacy_consent, make_integrity_pledge, make_all_common,
 )
+from modules.agreement_template import make_agreement  # 원본 HWPX 충실 재현 버전
 from modules.startup_forms import (
     make_application, make_settlement_report, make_all_startup,
 )
