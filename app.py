@@ -4,6 +4,7 @@ app.py — 2분할 레이아웃 (입력폼 | 문서 미리보기)
 """
 
 import sys
+import zipfile
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -99,6 +100,15 @@ st.markdown("""
 # ──────────────────────────────────────────────
 
 def _sec(t): st.markdown(f'<p class="sec">{t}</p>', unsafe_allow_html=True)
+
+@st.cache_data
+def _hwpx_preview_img(hwpx_path: str) -> bytes | None:
+    """HWPX 파일에서 Preview/PrvImage.png 추출."""
+    try:
+        with zipfile.ZipFile(hwpx_path) as z:
+            return z.read("Preview/PrvImage.png")
+    except Exception:
+        return None
 
 def _dl_buttons(p: Path):
     c1, c2 = st.columns(2)
@@ -440,23 +450,39 @@ def page_agreement():
              contract_no=contract_no)
 
     with col2:
-        st.markdown("#### 📄 문서 미리보기")
-        _preview(preview_html_agreement(d, party_type))
-        if "ag_path" in st.session_state:
+        is_hwpx_mode = "HWPX" in output_fmt
+        ag_path = st.session_state.get("ag_path")
+        ag_fmt  = st.session_state.get("ag_fmt", "docx")
+
+        if is_hwpx_mode:
+            # HWPX 모드: 생성된 파일 또는 원본 템플릿의 실제 이미지 미리보기
+            from modules.agreement_hwpx import TEMPLATE_HWPX
+            preview_src = str(ag_path) if (ag_path and ag_fmt == "hwpx" and ag_path.exists()) else str(TEMPLATE_HWPX)
+            img = _hwpx_preview_img(preview_src)
+            if img:
+                label = "📋 생성된 HWPX 미리보기" if (ag_path and ag_fmt == "hwpx") else "📋 HWPX 서식 미리보기 (원본 한글 레이아웃)"
+                st.markdown(f"#### {label}")
+                st.image(img, use_container_width=True)
+            else:
+                st.markdown("#### 📄 문서 미리보기")
+                _preview(preview_html_agreement(d, party_type))
+        else:
+            st.markdown("#### 📄 문서 미리보기")
+            _preview(preview_html_agreement(d, party_type))
+
+        if ag_path and ag_path.exists():
             st.divider()
-            p = st.session_state["ag_path"]
-            fmt = st.session_state.get("ag_fmt", "docx")
-            if fmt == "hwpx":
-                st.success(f"✅ 한글(HWPX) 파일 생성 완료: `{p.name}`")
-                with open(p, "rb") as f:
+            if ag_fmt == "hwpx":
+                st.success(f"✅ 한글(HWPX) 파일 생성 완료: `{ag_path.name}`")
+                with open(ag_path, "rb") as f:
                     st.download_button(
                         "⬇️ 한글(HWPX) 다운로드",
-                        f.read(), p.name,
+                        f.read(), ag_path.name,
                         mime="application/zip",
                         use_container_width=True,
                     )
             else:
-                _dl_buttons(p)
+                _dl_buttons(ag_path)
 
     if gen:
         required = [center_wide, support_content, period_start, period_end,
