@@ -454,21 +454,20 @@ def page_agreement():
         ag_path = st.session_state.get("ag_path")
         ag_fmt  = st.session_state.get("ag_fmt", "docx")
 
+        # 항상 실시간 HTML 미리보기 (입력값 즉시 반영)
+        st.markdown("#### 📄 문서 미리보기")
+        _preview(preview_html_agreement(d, party_type))
+
+        # HWPX 모드: 아래에 실제 한글 서식 이미지 추가 표시
         if is_hwpx_mode:
-            # HWPX 모드: 생성된 파일 또는 원본 템플릿의 실제 이미지 미리보기
             from modules.agreement_hwpx import TEMPLATE_HWPX
             preview_src = str(ag_path) if (ag_path and ag_fmt == "hwpx" and ag_path.exists()) else str(TEMPLATE_HWPX)
             img = _hwpx_preview_img(preview_src)
             if img:
-                label = "📋 생성된 HWPX 미리보기" if (ag_path and ag_fmt == "hwpx") else "📋 HWPX 서식 미리보기 (원본 한글 레이아웃)"
-                st.markdown(f"#### {label}")
+                st.divider()
+                label = "📋 생성된 HWPX 실제 서식" if (ag_path and ag_fmt == "hwpx") else "📋 HWPX 실제 서식 참고 (원본 한글 레이아웃)"
+                st.caption(label)
                 st.image(img, use_container_width=True)
-            else:
-                st.markdown("#### 📄 문서 미리보기")
-                _preview(preview_html_agreement(d, party_type))
-        else:
-            st.markdown("#### 📄 문서 미리보기")
-            _preview(preview_html_agreement(d, party_type))
 
         if ag_path and ag_path.exists():
             st.divider()
