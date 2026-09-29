@@ -483,30 +483,26 @@ def page_agreement():
         amount_fund          = e3.text_input("자활기금",              placeholder="0",         key="ag_af")
         amount_local_support = e4.text_input("지역자활사업지원비",    placeholder="0",         key="ag_al")
 
-        # 예시 데이터 자동 채우기
-        if st.button("✨ 예시로 채우기", key="ag_sample", use_container_width=True):
-            sample = {
-                "ag_cw": "제주특별자치도광역자활센터",
-                "ag_no": "제2025-001호",
-                "ag_sc": "자활기업 창업자금 지원",
-                "ag_ps": "2025.01.01.",
-                "ag_pe": "2025.12.31.",
-                "ag_rw": "홍길동",
-                "ag_rgw": "123-45-67890",
-                "ag_cl": "제주시자활센터",
-                "ag_rl": "김철수",
-                "ag_rgl": "234-56-78901",
-                "ag_en": "제주자활기업 1호",
-                "ag_re": "이영희",
-                "ag_rge": "345-67-89012",
-                "ag_ac": "5,000,000",
-                "ag_as": "1,000,000",
-                "ag_af": "0",
-                "ag_al": "500,000",
-            }
-            for k, v in sample.items():
-                st.session_state[k] = v
-            st.rerun()
+        # 예시 데이터 자동 채우기 (on_click 콜백: 위젯 생성 전에 실행됨)
+        def _fill_ag_sample():
+            st.session_state["ag_cw"]  = "제주특별자치도광역자활센터"
+            st.session_state["ag_no"]  = "제2025-001호"
+            st.session_state["ag_sc"]  = "자활기업 창업자금 지원"
+            st.session_state["ag_ps"]  = "2025.01.01."
+            st.session_state["ag_pe"]  = "2025.12.31."
+            st.session_state["ag_rw"]  = "홍길동"
+            st.session_state["ag_rgw"] = "123-45-67890"
+            st.session_state["ag_cl"]  = "제주시자활센터"
+            st.session_state["ag_rl"]  = "김철수"
+            st.session_state["ag_rgl"] = "234-56-78901"
+            st.session_state["ag_en"]  = "제주자활기업 1호"
+            st.session_state["ag_re"]  = "이영희"
+            st.session_state["ag_rge"] = "345-67-89012"
+            st.session_state["ag_ac"]  = "5,000,000"
+            st.session_state["ag_as"]  = "1,000,000"
+            st.session_state["ag_af"]  = "0"
+            st.session_state["ag_al"]  = "500,000"
+        st.button("✨ 예시로 채우기", key="ag_sample", on_click=_fill_ag_sample, use_container_width=True)
 
         btn_label = "📋 한글(HWPX) 생성" if "HWPX" in output_fmt else "📄 Word(DOCX) 생성"
         gen = st.button(btn_label, key="ag_gen", use_container_width=True)
