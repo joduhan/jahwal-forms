@@ -455,17 +455,20 @@ def page_agreement():
         ag_fmt  = st.session_state.get("ag_fmt", "docx")
 
         if is_hwpx_mode:
-            # HWPX 모드: 실제 한글 서식 이미지를 먼저 표시
+            # HWPX 모드: 탭으로 실시간 미리보기 + 실제 한글 서식 이미지 분리
             from modules.agreement_hwpx import TEMPLATE_HWPX
-            preview_src = str(ag_path) if (ag_path and ag_fmt == "hwpx" and ag_path.exists()) else str(TEMPLATE_HWPX)
-            img = _hwpx_preview_img(preview_src)
-            if img:
-                label = "📋 생성된 HWPX 실제 서식" if (ag_path and ag_fmt == "hwpx") else "📋 HWPX 원본 한글 레이아웃 미리보기"
-                st.markdown(f"#### {label}")
-                st.image(img, use_container_width=True)
-            # HTML 미리보기는 접이식으로
-            with st.expander("📄 입력값 확인 (실시간 미리보기)", expanded=False):
+            tab_live, tab_hwpx = st.tabs(["📄 실시간 미리보기", "📋 HWPX 실제 서식"])
+            with tab_live:
                 _preview(preview_html_agreement(d, party_type))
+            with tab_hwpx:
+                preview_src = str(ag_path) if (ag_path and ag_fmt == "hwpx" and ag_path.exists()) else str(TEMPLATE_HWPX)
+                img = _hwpx_preview_img(preview_src)
+                if img:
+                    label = "생성된 HWPX 서식" if (ag_path and ag_fmt == "hwpx") else "원본 한글 레이아웃 참고"
+                    st.caption(label)
+                    st.image(img, use_container_width=True)
+                else:
+                    st.info("HWPX 서식 이미지를 불러올 수 없습니다.")
         else:
             # DOCX 모드: 실시간 HTML 미리보기
             st.markdown("#### 📄 문서 미리보기")
