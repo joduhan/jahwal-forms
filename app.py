@@ -142,49 +142,95 @@ def _tr2(label, val, ph=""):
 
 def preview_html_agreement(d: dict, party_type: str) -> str:
     is3 = party_type == "3way"
-    party_rows = f"""
-    <tr><td class="lbl">광역자활센터명</td><td>{_v(d.get('center_wide'),'광역자활센터명')}</td></tr>
-    <tr><td class="lbl">광역 대표자</td><td>{_v(d.get('rep_wide'),'대표자')}</td></tr>
-    <tr><td class="lbl">광역 사업자등록번호</td><td>{_v(d.get('reg_wide'),'000-00-00000')}</td></tr>
-    <tr><td class="lbl">지역자활센터명</td><td>{_v(d.get('center_local'),'지역자활센터명')}</td></tr>
-    <tr><td class="lbl">지역 대표자</td><td>{_v(d.get('rep_local'),'대표자')}</td></tr>
-    <tr><td class="lbl">지역 사업자등록번호</td><td>{_v(d.get('reg_local'),'000-00-00000')}</td></tr>
-    """
+
+    cw   = _v(d.get('center_wide'),     '00광역자활센터')
+    rw   = _v(d.get('rep_wide'),        '')
+    rgw  = _v(d.get('reg_wide'),        '')
+    cl   = _v(d.get('center_local'),    '00지역자활센터')
+    rl   = _v(d.get('rep_local'),       '')
+    rgl  = _v(d.get('reg_local'),       '')
+    sc   = _v(d.get('support_content'), '사업비 지원')
+    ps   = _v(d.get('period_start'),    '2025.00.00.')
+    pe   = _v(d.get('period_end'),      '2025.00.00.')
+    cno  = _v(d.get('contract_no'),     '')
+    en   = _v(d.get('enterprise_name'), '00자활기업')
+    re_  = _v(d.get('rep_enterprise'),  '')
+    rge  = _v(d.get('reg_enterprise'),  '')
+
+    party_count = "3자용" if is3 else "2자용"
+    party_rowspan = 3 if is3 else 2
+
+    def party_row(name, rep, reg, first=False):
+        vtext_td = f'<td class="hwpx-vtext" rowspan="{party_rowspan}">협<br>약<br>당<br>사<br>자</td>' if first else ''
+        return f"""<tr>
+          {vtext_td}
+          <td class="hwpx-party-name">{name}</td>
+          <td class="hwpx-party-info">
+            ▶ 대표자: {rep}<br>
+            ▶ 사업자등록번호: {reg}<br>
+            ▶ 주&nbsp;&nbsp;&nbsp;&nbsp;소:
+          </td>
+        </tr>"""
+
+    party_html = party_row(cw, rw, rgw, first=True)
+    party_html += party_row(cl, rl, rgl)
     if is3:
-        party_rows += (
-            f'<tr><td class="lbl">자활기업명</td><td>{_v(d.get("enterprise_name"),"자활기업명")}</td></tr>'
-            f'<tr><td class="lbl">기업 대표자</td><td>{_v(d.get("rep_enterprise"),"대표자")}</td></tr>'
-            f'<tr><td class="lbl">기업 사업자번호</td><td>{_v(d.get("reg_enterprise"),"000-00-00000")}</td></tr>'
-        )
-    sign_line = f"""
-    {_v(d.get('center_wide'),'광역자활센터')} 대표자: {_v(d.get('rep_wide'),'')}&nbsp;(인)<br>
-    {_v(d.get('center_local'),'지역자활센터')} 대표자: {_v(d.get('rep_local'),'')}&nbsp;(인)
-    """ + (f"<br>{_v(d.get('enterprise_name'),'자활기업')} 대표자: {_v(d.get('rep_enterprise'),'')}&nbsp;(인)" if is3 else "")
+        party_html += party_row(en, re_, rge)
+
+    sign_html = f'<tr><td style="text-align:right;padding:3px 0;">{cw}&nbsp;&nbsp;&nbsp;(인)</td></tr>'
+    sign_html += f'<tr><td style="text-align:right;padding:3px 0;">{cl}&nbsp;&nbsp;&nbsp;(인)</td></tr>'
+    if is3:
+        sign_html += f'<tr><td style="text-align:right;padding:3px 0;">{en}&nbsp;&nbsp;&nbsp;(인)</td></tr>'
 
     return f"""
-    <div class="preview-title">[{'3자' if is3 else '2자'}용] 표준협약서</div>
-    <div style="text-align:right;font-size:9pt;margin-bottom:8px">
-        협약번호: {_v(d.get('contract_no'),'제2025-___호')}
-    </div>
-    <p class="preview-section">■ 협약 당사자</p>
-    <table class="pt"><tbody>{party_rows}</tbody></table>
-    <p class="preview-section">■ 협약 내용</p>
-    <table class="pt"><tbody>
-        {_tr2('지원내용', d.get('support_content'), '지원내용')}
-        <tr><td class="lbl">협약기간</td>
-            <td>{_v(d.get('period_start'),'시작일')} ~ {_v(d.get('period_end'),'종료일')}</td></tr>
-    </tbody></table>
-    <p class="preview-section">■ 예산 현황</p>
-    <table class="pt">
-        <tr><th>중앙자활자금</th><th>자부담</th><th>자활기금</th><th>지역자활사업지원비</th></tr>
-        <tr>
-            <td style="text-align:center">{_v(d.get('amount_central'),'0')}</td>
-            <td style="text-align:center">{_v(d.get('amount_self'),'0')}</td>
-            <td style="text-align:center">{_v(d.get('amount_fund'),'0')}</td>
-            <td style="text-align:center">{_v(d.get('amount_local_support'),'0')}</td>
+    <style>
+      .hwpx-wrap {{ font-family: '맑은 고딕', '나눔고딕', sans-serif; font-size: 9.5pt; color:#111; }}
+      .hwpx-header {{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }}
+      .hwpx-badge {{ background:#1B4F8A; color:white; font-weight:bold;
+                     padding:3px 10px; font-size:9pt; }}
+      .hwpx-badge-title {{ font-size:11pt; font-weight:bold; }}
+      .hwpx-main {{ border-collapse:collapse; width:100%; border:1.5px solid #222; }}
+      .hwpx-main td {{ border:1px solid #555; padding:6px 8px; vertical-align:middle; font-size:9pt; }}
+      .hwpx-title-row td {{ font-size:10.5pt; font-weight:bold; text-align:center; padding:8px; }}
+      .hwpx-cno {{ text-align:left !important; font-size:8.5pt; font-weight:normal; }}
+      .hwpx-vtext {{ writing-mode:vertical-rl; text-orientation:mixed; font-weight:bold;
+                     text-align:center; font-size:9pt; letter-spacing:4px;
+                     white-space:nowrap; padding:8px 5px; background:#f8f8f8; }}
+      .hwpx-party-name {{ font-weight:bold; text-align:center; font-size:9pt;
+                           white-space:nowrap; width:90px; background:#f8f8f8; }}
+      .hwpx-party-info {{ font-size:8.8pt; line-height:2.0; }}
+      .hwpx-content-lbl {{ font-weight:bold; text-align:center; width:65px; background:#f8f8f8; }}
+      .hwpx-body {{ font-size:9pt; line-height:1.9; margin:12px 0 6px; text-indent:1.5em; }}
+      .hwpx-foot {{ font-size:9pt; margin:4px 0 14px; }}
+      .hwpx-date {{ text-align:center; font-size:9.5pt; margin:10px 0 6px; }}
+      .hwpx-sign {{ border-collapse:collapse; width:100%; margin-top:4px; }}
+    </style>
+    <div class="hwpx-wrap">
+      <div class="hwpx-header">
+        <span class="hwpx-badge">공통 3</span>
+        <span class="hwpx-badge-title">표준협약서(안)</span>
+      </div>
+      <table class="hwpx-main">
+        <tr class="hwpx-title-row">
+          <td colspan="3">{sc} 협약서({party_count})</td>
+          <td class="hwpx-cno">협약번호 : {cno}</td>
         </tr>
-    </table>
-    <div class="sign">2025년&nbsp;&nbsp;&nbsp;월&nbsp;&nbsp;&nbsp;일<br>{sign_line}</div>
+        {party_html}
+        <tr>
+          <td class="hwpx-vtext" rowspan="2">협<br>약<br>내<br>용</td>
+          <td class="hwpx-content-lbl">지원내용</td>
+          <td colspan="2" style="text-align:center;">{sc}</td>
+        </tr>
+        <tr>
+          <td class="hwpx-content-lbl">협약기간</td>
+          <td colspan="2" style="text-align:center;">{ps} ~ {pe}&nbsp;(모니터링 기간 포함)</td>
+        </tr>
+      </table>
+      <p class="hwpx-body">협약당사자는 불입 문서에 의하여 협약을 체결하고, 신의에 따라 성실히 협약상의 의무를 이행할 것을 확약하여 그 증거로써 본 협약서를 작성하며, 기명날인한 후 각각 1부씩 보관한다.</p>
+      <p class="hwpx-foot">(불입) 협약서 1부.&nbsp;&nbsp;끝.</p>
+      <div class="hwpx-date">2025.&nbsp;&nbsp;&nbsp;&nbsp;00.&nbsp;&nbsp;&nbsp;&nbsp;00.</div>
+      <table class="hwpx-sign">{sign_html}</table>
+    </div>
     """
 
 
