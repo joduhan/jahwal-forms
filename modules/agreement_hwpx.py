@@ -145,23 +145,22 @@ def _replace_all_t(root, old: str, new: str) -> None:
 # ─── 셀별 채우기 ──────────────────────────────────────────────────────────────
 
 def _fill_name_cell(tc, name: str) -> None:
-    """00광역/자활센터 분리 셀 → 첫 단락에 전체 기관명, 두 번째 단락 비움."""
+    """기관명 셀: 첫 번째 <hp:t>에 전체 이름 설정, 셀 내 나머지 모든 <hp:t> 비움."""
     paras = list(tc.iter(f"{{{HP}}}p"))
     if not paras:
         return
-    runs0 = paras[0].findall(f"{{{HP}}}run")
-    if runs0:
-        ts = runs0[0].findall(f"{{{HP}}}t")
-        if ts:
-            for child in list(ts[0]):
-                ts[0].remove(child)
-            ts[0].text = name
-    if len(paras) > 1:
-        for run in paras[1].findall(f"{{{HP}}}run"):
+
+    first_set = False
+    for para in paras:
+        for run in para.findall(f"{{{HP}}}run"):
             for t in run.findall(f"{{{HP}}}t"):
                 for child in list(t):
                     t.remove(child)
-                t.text = ""
+                if not first_set:
+                    t.text = name
+                    first_set = True
+                else:
+                    t.text = ""
 
 
 def _fill_info_cell(tc, rep: str, reg_no: str, addr: str) -> None:
