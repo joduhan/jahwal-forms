@@ -444,9 +444,9 @@ def fill_hwpx(
     _fix_title_page_break(root)
 
     # ── XML 직렬화 ─────────────────────────────────────────────
-    new_xml = etree.tostring(
-        root, xml_declaration=True, encoding="UTF-8", standalone=True
-    )
+    # 원본과 동일한 XML 선언 형식 유지 (큰따옴표 + ?> 앞 공백)
+    body = etree.tostring(root, encoding="unicode")
+    new_xml = ('<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>' + body).encode("UTF-8")
 
     # ── 출력 경로 ─────────────────────────────────────────────
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
