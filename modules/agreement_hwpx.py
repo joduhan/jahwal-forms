@@ -3,6 +3,8 @@
 HWPX(ZIP) → Contents/section0.xml XML 교체 → 새 HWPX 저장
 """
 from __future__ import annotations
+import hashlib
+import base64
 import zipfile
 from pathlib import Path
 from lxml import etree
@@ -11,6 +13,41 @@ TEMPLATE_HWPX = Path(__file__).parent.parent / "표준 업무협약서.hwpx"
 OUTPUTS_DIR = Path(__file__).parent.parent / "outputs"
 
 HP = "http://www.hancom.co.kr/hwpml/2011/paragraph"
+
+
+# ─── manifest 해시 갱신 ────────────────────────────────────────────────────────
+
+def _update_manifest_hash(manifest_bytes: bytes, target_path: str, new_content: bytes) -> bytes | None:
+    """manifest.xml에서 target_path 항목의 SHA-1 checksum과 size를 갱신."""
+    if not manifest_bytes:
+        return None
+    try:
+        root = etree.fromstring(manifest_bytes)
+        ns = {"m": "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"}
+        MNS = "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0"
+
+        for entry in root.iter(f"{{{MNS}}}file-entry"):
+            fp = entry.get(f"{{{MNS}}}full-path", "")
+            if fp != target_path:
+                continue
+            # size 갱신
+            if f"{{{MNS}}}size" in entry.attrib:
+                entry.set(f"{{{MNS}}}size", str(len(new_content)))
+            # checksum 갱신 (SHA1/1K: 처음 1024바이트의 SHA-1)
+            enc = entry.find(f"{{{MNS}}}encryption-data")
+            if enc is not None:
+                ctype = enc.get(f"{{{MNS}}}checksum-type", "")
+                if "SHA1" in ctype:
+                    chunk = new_content[:1024]
+                    digest = hashlib.sha1(chunk).digest()
+                    enc.set(f"{{{MNS}}}checksum", base64.b64encode(digest).decode())
+                elif "SHA256" in ctype:
+                    chunk = new_content[:1024]
+                    digest = hashlib.sha256(chunk).digest()
+                    enc.set(f"{{{MNS}}}checksum", base64.b64encode(digest).decode())
+        return etree.tostring(root, xml_declaration=True, encoding="UTF-8", standalone=True)
+    except Exception:
+        return None
 
 
 # ─── XML 헬퍼 ─────────────────────────────────────────────────────────────────
@@ -421,17 +458,25 @@ def fill_hwpx(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # ── manifest.xml 해시 갱신 (한글 변조 감지 우회) ──────────────
+    updated_manifest = _update_manifest_hash(
+        all_files.get("META-INF/manifest.xml", b""),
+        "Contents/section0.xml",
+        new_xml,
+    )
+
     # ── ZIP 재압축 ─────────────────────────────────────────────
     with zipfile.ZipFile(output_path, "w") as zout:
         for name, data_bytes in all_files.items():
             orig_info = zip_infos[name]
             if name == "mimetype":
-                # mimetype은 압축 없이 STORE
                 info = zipfile.ZipInfo(name)
                 info.compress_type = zipfile.ZIP_STORED
                 zout.writestr(info, data_bytes)
             elif name == "Contents/section0.xml":
                 zout.writestr(name, new_xml, compress_type=zipfile.ZIP_DEFLATED)
+            elif name == "META-INF/manifest.xml" and updated_manifest:
+                zout.writestr(name, updated_manifest, compress_type=orig_info.compress_type)
             else:
                 zout.writestr(
                     name, data_bytes,
