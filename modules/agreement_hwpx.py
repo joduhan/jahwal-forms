@@ -52,6 +52,23 @@ def _update_manifest_hash(manifest_bytes: bytes, target_path: str, new_content: 
 
 # ─── XML 헬퍼 ─────────────────────────────────────────────────────────────────
 
+def _remove_markpen(root) -> None:
+    """문서 전체에서 hp:markpenBegin / hp:markpenEnd 제거 (형광펜 표시 제거)."""
+    HP_TAGS = {f"{{{HP}}}markpenBegin", f"{{{HP}}}markpenEnd"}
+    for parent in root.iter():
+        to_remove = [ch for ch in parent if ch.tag in HP_TAGS]
+        for ch in to_remove:
+            # tail 텍스트를 앞 형제나 parent.text 에 붙여서 내용 유지
+            tail = ch.tail or ""
+            idx = list(parent).index(ch)
+            if idx > 0:
+                prev = list(parent)[idx - 1]
+                prev.tail = (prev.tail or "") + tail
+            else:
+                parent.text = (parent.text or "") + tail
+            parent.remove(ch)
+
+
 def _t_full_text(t_el) -> str:
     """<hp:t> 노드의 전체 가시 텍스트 (text + 자식 tail)."""
     s = t_el.text or ""
@@ -442,6 +459,9 @@ def fill_hwpx(
 
     # ── "표준 업무협약서" 2페이지 + 가운데 정렬 ──────────────────
     _fix_title_page_break(root)
+
+    # ── 형광펜(마크펜) 제거 ────────────────────────────────────
+    _remove_markpen(root)
 
     # ── XML 직렬화 ─────────────────────────────────────────────
     # 원본과 동일한 XML 선언 형식 유지 (큰따옴표 + ?> 앞 공백)
