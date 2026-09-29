@@ -498,7 +498,7 @@ def page_agreement():
     with col2:
         is_hwpx_mode = "HWPX" in output_fmt
         ag_path = st.session_state.get("ag_path")
-        ag_fmt  = st.session_state.get("ag_fmt", "docx")
+        ag_fmt  = st.session_state.get("ag_fmt_result", "docx")
 
         from modules.agreement_hwpx import TEMPLATE_HWPX
         preview_src = str(ag_path) if (ag_path and ag_fmt == "hwpx" and ag_path.exists()) else str(TEMPLATE_HWPX)
@@ -569,7 +569,7 @@ def page_agreement():
                     else:
                         path = make_agreement(party_type=party_type, data=d)
                     st.session_state["ag_path"] = path
-                    st.session_state["ag_fmt"] = "hwpx" if "HWPX" in output_fmt else "docx"
+                    st.session_state["ag_fmt_result"] = "hwpx" if "HWPX" in output_fmt else "docx"
                     st.success(f"✅ 생성 완료: `{path.name}`")
                     st.rerun()
                 except Exception as e:
